@@ -11,20 +11,17 @@ type StepPlayerProps = {
 export function StepPlayer({ total, index, onChange }: StepPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const lastIndex = Math.max(0, total - 1);
+  const isPlaying = playing && index < lastIndex;
 
   useEffect(() => {
-    if (!playing) return;
-    if (index >= lastIndex) {
-      setPlaying(false);
-      return;
-    }
+    if (!isPlaying) return;
     const timer = window.setTimeout(() => {
       const nextIndex = index + 1;
       onChange(nextIndex);
       if (nextIndex >= lastIndex) setPlaying(false);
     }, 800);
     return () => window.clearTimeout(timer);
-  }, [index, lastIndex, onChange, playing]);
+  }, [index, isPlaying, lastIndex, onChange]);
 
   const changeTo = (nextIndex: number) => {
     setPlaying(false);
@@ -32,12 +29,11 @@ export function StepPlayer({ total, index, onChange }: StepPlayerProps) {
   };
 
   const togglePlayback = () => {
-    if (playing) {
+    if (isPlaying) {
       setPlaying(false);
       return;
     }
-    if (total === 0) return;
-    if (index >= lastIndex) onChange(0);
+    if (total === 0 || index >= lastIndex) return;
     setPlaying(true);
   };
 
@@ -49,14 +45,14 @@ export function StepPlayer({ total, index, onChange }: StepPlayerProps) {
       <button
         type="button"
         onClick={togglePlayback}
-        disabled={total === 0 || (!playing && index >= lastIndex)}
+        disabled={total === 0 || index >= lastIndex}
       >
-        {playing ? "Pausar" : "Reproducir"}
+        {isPlaying ? "Pausar" : "Reproducir"}
       </button>
       <button type="button" onClick={() => changeTo(index + 1)} disabled={total === 0 || index >= lastIndex}>
         Siguiente
       </button>
-      <button type="button" onClick={() => changeTo(0)} disabled={total === 0 || (index === 0 && !playing)}>
+      <button type="button" onClick={() => changeTo(0)} disabled={total === 0 || (index === 0 && !isPlaying)}>
         Reiniciar
       </button>
       <span className="step-count" aria-live="polite">

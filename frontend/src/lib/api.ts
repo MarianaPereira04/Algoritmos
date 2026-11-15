@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 const CONNECTION_ERROR = "No se pudo conectar con el servidor";
 
 export async function post<T>(path: string, body: unknown): Promise<T> {

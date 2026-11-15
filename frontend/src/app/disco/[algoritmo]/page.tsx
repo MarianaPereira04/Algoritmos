@@ -66,6 +66,7 @@ export default function DiskAlgorithmPage() {
   const [maxText, setMaxText] = useState("199");
   const [direction, setDirection] = useState<Direction>("up");
   const [result, setResult] = useState<DiskResult | null>(null);
+  const [stale, setStale] = useState(false);
   const [requestCount, setRequestCount] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function DiskAlgorithmPage() {
   const invalid = Boolean(requestValidation || headValidation || maxValidation);
 
   const clearResult = () => {
-    setResult(null);
+    setStale(result !== null);
     setError(null);
   };
 
@@ -111,6 +112,7 @@ export default function DiskAlgorithmPage() {
     if (invalid || !parsed || maxCylinder === null) return;
     setError(null);
     setResult(null);
+    setStale(false);
     setSubmitting(true);
     try {
       const response = await post<DiskResult>(`/disk/${algorithm}`, {
@@ -120,6 +122,7 @@ export default function DiskAlgorithmPage() {
         direction,
       });
       setResult(response);
+      setStale(false);
       setRequestCount(parsed.length);
       setCurrentStep(0);
     } catch (caught) {
@@ -248,6 +251,11 @@ export default function DiskAlgorithmPage() {
           <div>
             <p className="eyebrow !text-[#8a5a00]">Simulación</p>
             <h2 className="text-2xl font-bold tracking-tight text-[#14171f]">Recorrido del cabezal</h2>
+            {stale && (
+              <p className="mt-2 text-sm font-medium text-[#8a5a00]" role="status">
+                Resultado desactualizado, vuelve a ejecutar
+              </p>
+            )}
           </div>
 
           <DiskTrack

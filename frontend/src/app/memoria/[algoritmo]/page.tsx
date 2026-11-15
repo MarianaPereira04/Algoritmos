@@ -68,6 +68,7 @@ export default function MemoryAlgorithmPage() {
   const [referencesText, setReferencesText] = useState(classicReferences);
   const [framesText, setFramesText] = useState("3");
   const [result, setResult] = useState<SimulationResult | null>(null);
+  const [stale, setStale] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -90,7 +91,7 @@ export default function MemoryAlgorithmPage() {
     setReferencesText(classicReferences);
     setFramesText(String(frames));
     setError(null);
-    setResult(null);
+    setStale(result !== null);
   };
 
   const execute = async (event: FormEvent<HTMLFormElement>) => {
@@ -98,6 +99,7 @@ export default function MemoryAlgorithmPage() {
     if (currentReferencesError || currentFramesError) return;
     setError(null);
     setResult(null);
+    setStale(false);
     setSubmitting(true);
     try {
       const response = await post<SimulationResult>(`/memory/${algorithm}`, {
@@ -105,6 +107,7 @@ export default function MemoryAlgorithmPage() {
         frames: Number(framesText),
       });
       setResult(response);
+      setStale(false);
       setCurrentStep(0);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo conectar con el servidor");
@@ -142,7 +145,7 @@ export default function MemoryAlgorithmPage() {
               value={referencesText}
               onChange={(event) => {
                 setReferencesText(event.target.value);
-                setResult(null);
+                setStale(result !== null);
               }}
               placeholder="Ej.: 1, 2, 3, 4"
             />
@@ -166,7 +169,7 @@ export default function MemoryAlgorithmPage() {
               value={framesText}
               onChange={(event) => {
                 setFramesText(event.target.value);
-                setResult(null);
+                setStale(result !== null);
               }}
             />
             {currentFramesError && (
@@ -213,6 +216,11 @@ export default function MemoryAlgorithmPage() {
           <div>
             <p className="eyebrow !text-[var(--memoria)]">Simulación</p>
             <h2 className="text-2xl font-bold tracking-tight text-[#14171f]">Estado de los marcos</h2>
+            {stale && (
+              <p className="mt-2 text-sm font-medium text-[#8a5a00]" role="status">
+                Resultado desactualizado, vuelve a ejecutar
+              </p>
+            )}
           </div>
 
           <FrameTable

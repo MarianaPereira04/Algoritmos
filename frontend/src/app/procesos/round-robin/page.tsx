@@ -42,11 +42,13 @@ export default function RoundRobinPage() {
   const [processes, setProcesses] = useState(initialProcesses);
   const [quantum, setQuantum] = useState("2");
   const [result, setResult] = useState<SimulationResult | null>(null);
+  const [stale, setStale] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const updateProcess = (index: number, field: keyof ProcessInput, value: string) => {
+    setStale(result !== null);
     setProcesses((current) =>
       current.map((process, processIndex) =>
         processIndex === index ? { ...process, [field]: value } : process,
@@ -56,6 +58,7 @@ export default function RoundRobinPage() {
 
   const addProcess = () => {
     if (processes.length >= 10) return;
+    setStale(result !== null);
     const usedIds = new Set(processes.map((process) => process.id.trim()));
     let suffix = 1;
     while (usedIds.has(`P${suffix}`)) suffix += 1;
@@ -64,6 +67,7 @@ export default function RoundRobinPage() {
 
   const removeProcess = (index: number) => {
     if (processes.length <= 1) return;
+    setStale(result !== null);
     setProcesses((current) => current.filter((_, processIndex) => processIndex !== index));
   };
 
@@ -71,6 +75,7 @@ export default function RoundRobinPage() {
     event.preventDefault();
     setError(null);
     setResult(null);
+    setStale(false);
     setSubmitting(true);
     try {
       const response = await post<SimulationResult>("/processes/round-robin", {
@@ -82,6 +87,7 @@ export default function RoundRobinPage() {
         quantum: Number(quantum),
       });
       setResult(response);
+      setStale(false);
       setCurrentStep(0);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo conectar con el servidor");
@@ -115,7 +121,10 @@ export default function RoundRobinPage() {
               step="1"
               required
               value={quantum}
-              onChange={(event) => setQuantum(event.target.value)}
+              onChange={(event) => {
+                setQuantum(event.target.value);
+                setStale(result !== null);
+              }}
             />
           </label>
         </div>
@@ -211,6 +220,11 @@ export default function RoundRobinPage() {
           <div>
             <p className="eyebrow">Resultado</p>
             <h2 className="text-2xl font-bold tracking-tight text-[#14171f]">Ejecución paso a paso</h2>
+            {stale && (
+              <p className="mt-2 text-sm font-medium text-[#8a5a00]" role="status">
+                Resultado desactualizado, vuelve a ejecutar
+              </p>
+            )}
           </div>
 
           <Gantt timeline={result.timeline} index={currentStep} onChange={setCurrentStep} />

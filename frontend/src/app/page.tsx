@@ -1,5 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Card } from "@/components/Card";
+
+export const metadata: Metadata = { title: "Inicio | OS Lab" };
 
 const groups = [
   {
